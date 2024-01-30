@@ -3,17 +3,17 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "packageManager": "pnpm@8.15.0",
+  "packageManager": "pnpm@8.4.0",
   "scripts": {
-    "start": "node build/server.js",
+    "start": "node build/src/server.js",
     "dev": "tsx watch src/server.ts",
-    "build": "tsup src --out-dir build",
+    "build": "tsc",
     "migrate": "pnpm prisma migrate dev"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "prisma":{
+  "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
   "devDependencies": {

@@ -1,4 +1,5 @@
 import { fastifyCors } from '@fastify/cors'
+import 'dotenv/config'
 import { fastify } from 'fastify'
 import { createTranscriptionRoute } from './routes/create-transcription'
 import { generateAICompletionRoute } from './routes/generate-ai-completion'
@@ -14,8 +15,19 @@ app.register(uploadVideoRoute)
 app.register(createTranscriptionRoute)
 app.register(generateAICompletionRoute)
 
+app.setErrorHandler((error, _, reply) => {
+
+  if (process.env.NODE_ENV !== 'production') {
+    console.error(error)
+  } else {
+    // TODO: Here we should log to an external tool like DataDog/NewRelic/Sentry
+  }
+
+  return reply.send(error.message)
+})
+
 app.listen({
-  port: 3333,
+  port: Number(process.env.PORT) || 3333, host: "0.0.0.0"
 }).then(()=>{
   console.log('HTTP Server Running!')
 })
