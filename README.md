@@ -1,63 +1,81 @@
-<p align="center">
-  <img alt="Rocketseat Education" src="https://avatars.githubusercontent.com/u/69590972?s=200&v=4" width="100px" />
-</p>
+# upload.ai API
 
-<p align="center">
-  <img src="https://img.shields.io/static/v1?label=Rocketseat&message=Education&color=8257e5&labelColor=202024" alt="Rocketseat Project" />
-</p>
+The backend of **upload.ai**, an app that turns videos into AI-generated YouTube titles and descriptions. It receives the audio extracted from a video, transcribes it with **OpenAI Whisper**, and streams **GPT** completions based on reusable prompt templates.
 
-## 💻 Projeto
+> Built during NLW 14 (Next Level Week), a Rocketseat event.
+> Frontend: [nlw14-upload-ai](https://github.com/vinigouvea16/nlw14-upload-ai)
 
-Aplicação - desenvolvida na NextLevelWeek 14 - que possibilita realizar upload de vídeos e por meio de IA criar automaticamente títulos chamativos e descrições com uma boa indexação, além da liberdade de estipular vários prompts possibilitando uma infinidade de resultados através do uso da API da OpenAI integrada nela.
+## Endpoints
 
-<p align="center">
-  Feito com 💜 by <a href="https://www.rocketseat.com.br/">Rocketseat </a>
-</p>
+| Method | Route                          | Description                                                                 |
+| ------ | ------------------------------ | --------------------------------------------------------------------------- |
+| GET    | `/prompts`                     | Lists the available prompt templates                                        |
+| POST   | `/videos`                      | Uploads an `.mp3` file (multipart, max. 25 MB) and registers it             |
+| POST   | `/videos/:videoId/transcription` | Transcribes the audio with Whisper and saves the transcription            |
+| POST   | `/ai/complete`                 | Fills a prompt template with the transcription and **streams** the GPT answer |
 
+Example requests are in [`routes.http`](./routes.http).
 
-## Run Locally
+### `POST /ai/complete`
 
-Clone the project
-
-```bash
-  git clone https://github.com/vinigouvea16/upload-ai-api
+```json
+{
+  "videoId": "uuid",
+  "prompt": "Generate three titles for this video: {transcription}",
+  "temperature": 0.5
+}
 ```
 
-Go to the project directory
+The `{transcription}` placeholder is replaced with the stored transcription before the request goes to the model. Returns `400` if the video has not been transcribed yet.
+
+## Highlights
+
+- **Streaming responses:** GPT output is piped straight to the HTTP response with the Vercel AI SDK, so the user sees text as it is generated.
+- **Prompt templates in the database:** prompts are data, not code, so new use cases don't need a deploy. They are seeded with Prisma.
+- **Validation with Zod** for params and bodies (UUIDs, temperature between 0 and 1).
+- **Streamed file uploads** to disk with `stream.pipeline`, with type and size checks.
+- **Centralized error handling** in Fastify.
+
+## Tech stack
+
+- **Node.js** + **TypeScript**
+- **Fastify** (+ `@fastify/multipart`, `@fastify/cors`)
+- **Prisma ORM** + **PostgreSQL**
+- **OpenAI SDK** (Whisper and Chat Completions)
+- **Vercel AI SDK** (`ai`) for streaming
+- **Zod**
+
+## Running locally
 
 ```bash
-  cd upload-ai-api
+git clone https://github.com/vinigouvea16/upload-ai-api
+cd upload-ai-api
+pnpm install
 ```
 
-Install dependencies
+Create a `.env` file:
+
+```env
+DATABASE_URL="postgresql://user:password@localhost:5432/uploadai"
+OPENAI_KEY="your-openai-api-key"
+PORT=3333
+```
+
+Run the migrations and seed the prompt templates:
 
 ```bash
-  npm install
-  npm install -D tailwindcss postcss autoprefixer
-  npx tailwindcss init -p
-  
+pnpm migrate
+pnpm prisma db seed
 ```
 
-Start the server + db
+Start the server:
 
 ```bash
-  npm run dev
+pnpm dev
 ```
 
-```bash
-  npx prisma studio
-```
+The API runs at `http://localhost:3333`.
 
+---
 
-<!--START_SECTION:footer-->
-
-<br />
-<br />
-
-<p align="center">
-  <a href="https://discord.gg/rocketseat" target="_blank">
-    <img align="center" src="https://storage.googleapis.com/golden-wind/comunidade/rodape.svg" alt="banner"/>
-  </a>
-</p>
-
-<!--END_SECTION:footer-->
+Made by [Vinicius Gouvea](https://github.com/vinigouvea16), based on the NLW 14 project by [Rocketseat](https://www.rocketseat.com.br/).
